@@ -300,16 +300,26 @@ const WritingTest = () => {
       if (!t1Eval && task1Answer.trim().length >= 50) {
         toast({
           title: "Evaluating Task 1...",
-          description: "Please wait while AI evaluates your essay.",
+          description: "Please wait while AI analyzes your essay and the chart/graph.",
         });
 
         const task1Prompt = test?.writing?.[0]?.prompt || 'Describe the information presented.';
+        let task1ImageUrl = test?.writing?.[0]?.imageUrl; // Get the chart/graph image URL
+        
+        // Convert relative paths to full URLs for the vision model
+        if (task1ImageUrl && !task1ImageUrl.startsWith('http')) {
+          // Remove leading slash if present, and 'public/' prefix since Vite serves from public
+          const cleanPath = task1ImageUrl.replace(/^\/?(public\/)?/, '');
+          task1ImageUrl = `${window.location.origin}/${cleanPath}`;
+        }
+        
         const result1 = await evaluateWriting({
           essayText: task1Answer,
           taskType: 'Task 1',
           prompt: task1Prompt,
           testId: test?.testId || testId || 'unknown-test',
-          taskNumber: 1
+          taskNumber: 1,
+          imageUrl: task1ImageUrl // Pass full image URL for vision model
         });
 
         if (result1.success && result1.evaluation) {

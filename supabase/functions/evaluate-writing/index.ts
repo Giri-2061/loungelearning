@@ -13,7 +13,7 @@ serve(async (req) => {
     const GROQ_API_KEY = Deno.env.get('GROQ_API_KEY')
     if (!GROQ_API_KEY) throw new Error('GROQ_API_KEY not configured')
 
-    const { essayText, taskType, prompt, testId, taskNumber, userId } = await req.json()
+    const { essayText, taskType, prompt, testId, taskNumber, userId, imageUrl } = await req.json()
 
     // Validate required fields
     if (!essayText || !taskType) {
@@ -34,6 +34,7 @@ Follow these HARD CRITERIA CEILINGS:
 
 1. TASK ACHIEVEMENT / RESPONSE:
    - [TASK 1] If there is NO clear overview (summary of main trends/differences), score MUST NOT exceed 5.0 for this category.
+   - [TASK 1] If the student fails to accurately describe the key features shown in the image/chart/graph, score MUST NOT exceed 5.0.
    - [TASK 2] If the student addresses only part of the prompt (e.g., social but not practical problems), score MUST NOT exceed 5.0.
    - [TASK 2] If the position is not clear throughout or the conclusion contradicts the intro, score MUST NOT exceed 5.0.
    - [OFF-TOPIC] If the essay drifts significantly (e.g., discussing how to learn a language instead of the problems of living abroad), score MUST NOT exceed 4.0 or 5.0.
@@ -57,7 +58,44 @@ Return ONLY a JSON object. No prose.
   "wordCount": number
 }`;
 
-    const userPrompt = `TASK: ${taskType}\nPROMPT: ${prompt}\n\nSTUDENT ESSAY:\n${essayText}\n\nEvaluate strictly according to official standards. Count words accurately.`;
+    // Build messages based on whether we have a VALID image (Task 1 with chart/graph)
+    let messages: any[];
+    let model: string;
+
+    // Check if imageUrl is valid (http/https URL or base64 data URL)
+    const hasValidImageUrl = imageUrl && (
+      imageUrl.startsWith('http://') || 
+      imageUrl.startsWith('https://') || 
+      imageUrl.startsWith('data:image/')
+    );
+
+    if (taskType === 'Task 1' && hasValidImageUrl) {
+      // Use vision model for Task 1 with valid image
+      model = 'meta-llama/llama-4-scout-17b-16e-instruct';
+      messages = [
+        { role: 'system', content: systemPrompt },
+        { 
+          role: 'user', 
+          content: [
+            {
+              type: 'text',
+              text: `TASK: ${taskType}\nPROMPT: ${prompt}\n\nSTUDENT ESSAY:\n${essayText}\n\nFirst, analyze the image (chart/graph/diagram) carefully. Then evaluate the student's essay strictly according to official IELTS standards. Check if the student accurately described the key features, trends, and comparisons shown in the image. Count words accurately.`
+            },
+            {
+              type: 'image_url',
+              image_url: { url: imageUrl }
+            }
+          ]
+        }
+      ];
+    } else {
+      // Use text-only model for Task 2 or Task 1 without valid image
+      model = 'llama-3.3-70b-versatile';
+      messages = [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: `TASK: ${taskType}\nPROMPT: ${prompt}\n\nSTUDENT ESSAY:\n${essayText}\n\nEvaluate strictly according to official standards. Count words accurately.` }
+      ];
+    }
 
     // 3. High-Precision API Call
     const aiResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -67,11 +105,8 @@ Return ONLY a JSON object. No prose.
         'Authorization': `Bearer ${GROQ_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
+        model,
+        messages,
         temperature: 0.1, // Near-zero temperature for strict, consistent grading
         max_tokens: 2000,
       })
@@ -84,7 +119,20 @@ Return ONLY a JSON object. No prose.
       throw new Error('Failed to get AI response: ' + (aiData.error?.message || 'No response content'))
     }
     
-    const evaluationJson = JSON.parse(aiData.choices[0].message.content.replace(/```json|```/g, "").trim())
+    // Parse JSON response with better error handling
+    let evaluationJson;
+    try {
+      const rawContent = aiData.choices[0].message.content;
+      // Remove markdown code blocks and clean up
+      const cleanedContent = rawContent
+        .replace(/```json\s*/g, '')
+        .replace(/```\s*/g, '')
+        .trim();
+      evaluationJson = JSON.parse(cleanedContent);
+    } catch (parseError) {
+      console.error('JSON Parse Error:', parseError, 'Raw content:', aiData.choices[0].message.content);
+      throw new Error('Failed to parse AI response as JSON. The AI may have returned an invalid format.');
+    }
 
     // 4. Save to Database (if userId provided)
     if (userId) {

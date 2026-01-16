@@ -32,6 +32,26 @@ export interface EvaluateWritingParams {
   prompt: string;
   testId: string;
   taskNumber: 1 | 2;
+  imageUrl?: string; // For Task 1 chart/graph/diagram
+}
+
+// Helper function to convert image URL to base64
+async function imageUrlToBase64(url: string): Promise<string | null> {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) return null;
+    
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.error('Failed to convert image to base64:', error);
+    return null;
+  }
 }
 
 export async function evaluateWriting(params: EvaluateWritingParams): Promise<{
@@ -44,6 +64,15 @@ export async function evaluateWriting(params: EvaluateWritingParams): Promise<{
     const { data: { user } } = await supabase.auth.getUser();
     const userId = user?.id;
 
+    // Convert image to base64 if provided (for vision model)
+    let imageBase64: string | undefined;
+    if (params.imageUrl) {
+      const base64 = await imageUrlToBase64(params.imageUrl);
+      if (base64) {
+        imageBase64 = base64;
+      }
+    }
+
     // Make direct API call with apikey header (no JWT required)
     const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/evaluate-writing`, {
       method: 'POST',
@@ -54,6 +83,7 @@ export async function evaluateWriting(params: EvaluateWritingParams): Promise<{
       },
       body: JSON.stringify({
         ...params,
+        imageUrl: imageBase64 || params.imageUrl, // Send base64 if available, otherwise original URL
         userId // Pass userId in body for database storage
       })
     });
