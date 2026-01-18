@@ -100,7 +100,9 @@ export default function Auth() {
       if (error.message.includes('Invalid login credentials')) {
         toast.error('Invalid email or password');
       } else if (error.message.includes('Email not confirmed')) {
-        toast.error('Please confirm your email before logging in');
+        toast.error('Please verify your email before logging in. Check your inbox for the verification link.');
+        // Optionally redirect to check email page
+        navigate('/auth/check-email', { state: { email: loginEmail } });
       } else {
         toast.error(error.message);
       }
@@ -134,7 +136,7 @@ export default function Auth() {
 
     setIsSubmitting(true);
     const role = isTeacher ? 'consultancy_owner' : 'student';
-    const { error } = await signUp(signupEmail, signupPassword, signupName, role);
+    const { error, data } = await signUp(signupEmail, signupPassword, signupName, role);
     setIsSubmitting(false);
 
     if (error) {
@@ -144,8 +146,14 @@ export default function Auth() {
         toast.error(error.message);
       }
     } else {
-      toast.success('Account created successfully!');
-      navigate('/');
+      // Check if email confirmation is required
+      if (data?.user && !data.user.email_confirmed_at) {
+        // Redirect to check email page
+        navigate('/auth/check-email', { state: { email: signupEmail } });
+      } else {
+        toast.success('Account created successfully!');
+        navigate('/');
+      }
     }
   };
 

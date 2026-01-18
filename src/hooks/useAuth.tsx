@@ -79,6 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         data: {
           full_name: fullName,
         },
+        emailRedirectTo: `${window.location.origin}/auth/verified`,
       },
     });
     
@@ -89,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .insert({ user_id: data.user.id, role });
     }
     
-    return { error };
+    return { error, data };
   };
 
   const signIn = async (email: string, password: string) => {
