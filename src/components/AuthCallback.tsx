@@ -32,6 +32,19 @@ export function AuthCallback() {
       return;
     }
 
+    // Handle recovery type - redirect to reset password page BEFORE Supabase processes hash
+    if (accessToken && type === 'recovery') {
+      hasHandledRef.current = true;
+      // If not on reset-password page, redirect there WITH the hash
+      if (!location.pathname.includes('/auth/reset-password')) {
+        // Navigate to reset password page, keeping the hash for processing
+        navigate('/auth/reset-password' + window.location.hash, { replace: true });
+        return;
+      }
+      // If already on reset-password page, let that component handle everything
+      return;
+    }
+
     // Handle successful auth callback (email verification, magic link, etc.)
     if (accessToken && type) {
       hasHandledRef.current = true;
@@ -52,17 +65,20 @@ export function AuthCallback() {
         if (location.pathname !== '/') {
           navigate('/', { replace: true });
         }
-      } else if (type === 'recovery') {
-        toast.info('Password recovery link verified');
-        // Handle password recovery flow if needed
-        window.history.replaceState({}, '', location.pathname);
       }
     }
   }, [location, navigate]);
 
-  // Listen for auth state changes
+  // Listen for auth state changes - specifically for PASSWORD_RECOVERY event
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // Handle PASSWORD_RECOVERY event - redirect to reset password page
+      if (event === 'PASSWORD_RECOVERY' && session) {
+        if (!location.pathname.includes('/auth/reset-password')) {
+          navigate('/auth/reset-password', { replace: true });
+        }
+      }
+      
       if (event === 'SIGNED_IN' && session?.user?.email_confirmed_at) {
         // Check if this is from email verification (user just confirmed)
         const isNewConfirmation = session.user.email_confirmed_at && 
@@ -75,7 +91,7 @@ export function AuthCallback() {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [location, navigate]);
 
   return null;
 }
