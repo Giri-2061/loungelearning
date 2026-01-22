@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { AuthProvider } from "./hooks/useAuth";
+import { AuthCallback } from "./components/AuthCallback";
 import PageTransition from "./components/PageTransition";
 import Index from "./pages/Index";
 import About from "./pages/About";
@@ -21,6 +22,10 @@ import SpeakingCambridge08 from "./pages/SpeakingCambridge08";
 import SpeakingTestAIExaminer from "./pages/SpeakingTestAIExaminer";
 import WritingCambridge08 from "./pages/WritingCambridge08";
 import Auth from "./pages/Auth";
+import CheckEmail from "./pages/CheckEmail";
+import EmailVerified from "./pages/EmailVerified";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import ScoreCalculator from "./pages/ScoreCalculator";
 import Classrooms from "./pages/Classrooms";
@@ -49,10 +54,16 @@ function InnerRoutes() {
   const location = useLocation();
 
   return (
-    <AnimatePresence mode="wait" initial={false}>
+    <>
+      <AuthCallback />
+      <AnimatePresence mode="wait" initial={false}>
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<PageTransition><MockTests /></PageTransition>} />
         <Route path="/auth" element={<PageTransition><Auth /></PageTransition>} />
+        <Route path="/auth/check-email" element={<PageTransition><CheckEmail /></PageTransition>} />
+        <Route path="/auth/verified" element={<PageTransition><EmailVerified /></PageTransition>} />
+        <Route path="/auth/forgot-password" element={<PageTransition><ForgotPassword /></PageTransition>} />
+        <Route path="/auth/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
         <Route path="/dashboard" element={<PageTransition><Dashboard /></PageTransition>} />
         <Route path="/score-calculator" element={<PageTransition><ScoreCalculator /></PageTransition>} />
         <Route path="/classrooms" element={<PageTransition><Classrooms /></PageTransition>} />
@@ -83,5 +94,6 @@ function InnerRoutes() {
         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
       </Routes>
     </AnimatePresence>
+    </>
   );
 }

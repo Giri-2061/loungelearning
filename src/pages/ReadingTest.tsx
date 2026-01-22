@@ -33,7 +33,7 @@ interface Section {
   audioUrl?: string;
   passageTitle?: string;
   passageContent?: string;
-  passageText?: string; // legacy field support
+  passageText?: string; 
   questions: Question[];
 }
 
