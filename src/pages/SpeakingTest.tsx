@@ -145,7 +145,7 @@ const SpeakingTest = () => {
 
   // Check microphone permission
   useEffect(() => {
-    navigator.permissions?.query({ name: 'microphone' as PermissionName })
+    navigator.permissions?.query({ name: 'microphone' as any })
       .then(result => {
         setMicPermission(result.state as "granted" | "denied" | "prompt");
         result.onchange = () => setMicPermission(result.state as "granted" | "denied" | "prompt");

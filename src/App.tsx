@@ -18,6 +18,7 @@ import ReadingTest from "./pages/ReadingTest";
 import ReadingCambridge08 from "./pages/ReadingCambridge08";
 import SpeakingTest from "./pages/SpeakingTest";
 import SpeakingCambridge08 from "./pages/SpeakingCambridge08";
+import SpeakingTestAIExaminer from "./pages/SpeakingTestAIExaminer";
 import WritingCambridge08 from "./pages/WritingCambridge08";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -65,6 +66,7 @@ function InnerRoutes() {
   <Route path="/reading/cambridge-08" element={<PageTransition><ReadingCambridge08 /></PageTransition>} />
   <Route path="/writing/cambridge-08" element={<PageTransition><WritingCambridge08 /></PageTransition>} />
   <Route path="/speaking/cambridge-08" element={<PageTransition><SpeakingCambridge08 /></PageTransition>} />
+  <Route path="/test/speaking/ai-examiner/:testId" element={<PageTransition><SpeakingTestAIExaminer /></PageTransition>} />
   <Route path="/test/listening/:testId" element={<PageTransition><ListeningTest /></PageTransition>} />
   <Route path="/test/reading/:testId" element={<PageTransition><ReadingTest /></PageTransition>} />
   <Route path="/test/writing/:testId" element={<PageTransition><WritingTest /></PageTransition>} />
