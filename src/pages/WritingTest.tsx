@@ -423,7 +423,7 @@ const WritingTest = () => {
           test_type: 'writing',
           user_id: user.id,
           band_score: finalBand,
-          correct_count: null,
+          correct_count: 0,
           total_questions: 2,
           answers: {
             task1: task1Answer,
