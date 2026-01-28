@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { AuthProvider } from "./hooks/useAuth";
+import { ThemeProvider } from "./hooks/useTheme";
 import { AuthCallback } from "./components/AuthCallback";
 import PageTransition from "./components/PageTransition";
 import Index from "./pages/Index";
@@ -31,21 +32,25 @@ import ScoreCalculator from "./pages/ScoreCalculator";
 import Classrooms from "./pages/Classrooms";
 import ClassroomDetail from "./pages/ClassroomDetail";
 import NotFound from "./pages/NotFound";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
 
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <InnerRoutes />
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
-  </QueryClientProvider>
+  <ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <InnerRoutes />
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  </ThemeProvider>
 );
 
 export default App;
@@ -90,6 +95,8 @@ function InnerRoutes() {
   <Route path="/listening-test" element={<PageTransition><ListeningTest /></PageTransition>} />
   <Route path="/reading-test" element={<PageTransition><ReadingTest /></PageTransition>} />
   <Route path="/speaking-test" element={<PageTransition><SpeakingTest /></PageTransition>} />
+  <Route path="/privacy" element={<PageTransition><Privacy /></PageTransition>} />
+  <Route path="/terms" element={<PageTransition><Terms /></PageTransition>} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
       </Routes>

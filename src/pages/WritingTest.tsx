@@ -474,9 +474,9 @@ const WritingTest = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="flex flex-col min-h-screen bg-background">
       <TestHeader title={test?.testId ? `IELTS Writing — ${test.testId}` : "IELTS Writing Test"} session={session} />
-      <main className="pt-32 sm:pt-24 pb-20">
+      <main className="flex-grow pt-32 sm:pt-24 pb-20">
         <div className="container mx-auto px-4 max-w-4xl">
           {loadingTest && <div className="text-center">Loading writing tasks...</div>}
 

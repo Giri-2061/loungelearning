@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { z } from 'zod';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2, BookOpen, RefreshCw, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import LegalLinks from '@/components/LegalLinks';
 
 const loginSchema = z.object({
   email: z.string().trim().email({ message: 'Invalid email address' }),
@@ -49,6 +50,7 @@ export default function Auth() {
   const [signupShowConfirmPassword, setSignupShowConfirmPassword] = useState(false);
   const [isTeacher, setIsTeacher] = useState(false);
   const [signupErrors, setSignupErrors] = useState<Record<string, string>>({});
+  const [acceptTerms, setAcceptTerms] = useState(false);
 
   // Load remember me preference on mount
   useEffect(() => {
@@ -136,6 +138,11 @@ export default function Auth() {
     e.preventDefault();
     setSignupErrors({});
     
+    if (!acceptTerms) {
+      setSignupErrors({ terms: 'You must accept the Terms of Service and Privacy Policy' });
+      return;
+    }
+    
     const result = signupSchema.safeParse({
       fullName: signupName,
       email: signupEmail,
@@ -196,7 +203,7 @@ export default function Auth() {
           </div>
           <div>
             <CardTitle className="text-2xl font-bold text-foreground">
-              IELTS Practice Hub
+              LEXORA
             </CardTitle>
             <CardDescription className="text-muted-foreground mt-2">
               Sign in to access your practice tests and track your progress
@@ -376,7 +383,24 @@ export default function Auth() {
                     <p className="text-sm text-destructive">{signupErrors.confirmPassword}</p>
                   )}
                 </div>
-                <Button type="submit" className="w-full" disabled={isSubmitting}>
+
+                <div className="flex items-start space-x-2">
+                  <Checkbox
+                    id="accept-terms"
+                    checked={acceptTerms}
+                    onCheckedChange={(checked) => setAcceptTerms(checked as boolean)}
+                    className="mt-1"
+                  />
+                  <Label htmlFor="accept-terms" className="text-sm font-normal cursor-pointer leading-relaxed">
+                    I agree to the{' '}
+                    <LegalLinks variant="signup" />
+                  </Label>
+                </div>
+                {signupErrors.terms && (
+                  <p className="text-sm text-destructive">{signupErrors.terms}</p>
+                )}
+
+                <Button type="submit" className="w-full" disabled={isSubmitting || !acceptTerms}>
                   {isSubmitting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
