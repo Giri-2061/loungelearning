@@ -31,6 +31,13 @@ export default function TestHeader({ title, session, recordingIndicator }: Props
 
             <div className="flex items-center gap-3 flex-shrink-0">
               {recordingIndicator}
+              {/* Theme toggle for test pages */}
+              <div className="ml-2">
+                {/** Dynamically import ThemeToggle to avoid circular deps if needed */}
+                {require('@/components/ThemeToggle').ThemeToggle ? (
+                  require('@/components/ThemeToggle').ThemeToggle()
+                ) : null}
+              </div>
               {!session.started ? (
                 <Button onClick={() => session.setStarted(true)} className="bg-primary">Begin Test</Button>
               ) : (
